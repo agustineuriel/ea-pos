@@ -3,33 +3,30 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { DataTable } from "@/components/data-table";
-import { columns } from "@/components/inventory/column";
-import type { Item } from "@/components/inventory/column";
 import LoadingSpinner from "@/components/loading-indicator";
-import CreateItemComponent from "@/components/inventory/create";
+import CreateCategoryComponent from "@/components/category/create";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import CreateCategoryComponent from "@/components/category/create"; // Import the new component
+import { Category, columns } from "@/components/category/column";
 
-const InventoryPage = () => {
-    const [data, setData] = useState<Item[]>([]);
+const CategoriesPage = () => {
+    const [data, setData] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);
-    const [isCreateItemOpen, setIsCreateItemOpen] = useState(false);
-    const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false); // State for category creation dialog
+    const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
     const [search, setSearch] = useState("");
-    const [filteredData, setFilteredData] = useState<Item[]>([]);
+    const [filteredData, setFilteredData] = useState<Category[]>([]);
 
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await fetch("/api/inventory");
+            const response = await fetch("/api/categories"); //  Correct API endpoint
             if (!response.ok) {
                 throw new Error("Network response was not ok");
             }
             const result = await response.json();
             setData(result.data);
         } catch (error) {
-            console.error("Error fetching inventory data:", error);
+            console.error("Error fetching categories data:", error);
         } finally {
             setLoading(false);
         }
@@ -39,33 +36,9 @@ const InventoryPage = () => {
         fetchData();
     }, [fetchData]);
 
-    // Function to handle item creation
-    const handleCreateItem = async (newItem: Omit<Item, 'item_id' | 'created_at' | 'updated_at'>) => {
+    const handleCreateCategory = async (newCategory: Omit<Category, 'category_id' | 'created_at' | 'updated_at'>) => {
         try {
-            const response = await fetch("/api/inventory", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newItem),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to create item");
-            }
-
-            await fetchData();
-            setIsCreateItemOpen(false);
-        } catch (error: any) {
-            console.error("Error creating item:", error);
-            alert(`Error: ${error.message}`);
-        }
-    };
-
-      const handleCreateCategory = async (newCategory: { category_name: string }) => {
-        try {
-            const response = await fetch("/api/categories", {  // Use the correct endpoint
+            const response = await fetch("/api/categories", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -78,8 +51,7 @@ const InventoryPage = () => {
                 throw new Error(errorData.error || "Failed to create category");
             }
 
-            // Optionally, you might want to fetch categories again, if you display them
-            // in this component.  For now, just close the dialog.
+            await fetchData();
             setIsCreateCategoryOpen(false);
         } catch (error: any) {
             console.error("Error creating category:", error);
@@ -87,25 +59,17 @@ const InventoryPage = () => {
         }
     };
 
-    const handleCloseCreateItem = () => {
-        setIsCreateItemOpen(false);
-    };
-
-      const handleCloseCreateCategory = () => {
+    const handleCloseCreateCategory = () => {
         setIsCreateCategoryOpen(false);
     };
 
-    // Filter data based on search term
     useEffect(() => {
-        const results = data.filter((item) =>
-            item.description.toLowerCase().includes(search.toLowerCase()) ||
-            item.unit.toLowerCase().includes(search.toLowerCase())
+        const results = data.filter((category) =>
+            category.category_name.toLowerCase().includes(search.toLowerCase())
         );
         setFilteredData(results);
     }, [search, data]);
 
-
-    console.log("Data:", data);
     return (
         <div
             className={cn(
@@ -114,12 +78,12 @@ const InventoryPage = () => {
             )}
         >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold text-foreground">Inventory</h1>
+                <h1 className="text-3xl font-bold text-foreground">Categories</h1>
                 <div className="flex items-center gap-4">
-                     <div className="relative">
+                    <div className="relative">
                         <Input
                             type="text"
-                            placeholder="Search Inventory..."
+                            placeholder="Search Categories..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="max-w-xs pl-10"
@@ -128,11 +92,8 @@ const InventoryPage = () => {
                             🔍
                         </span>
                     </div>
-                                  <Button onClick={() => setIsCreateCategoryOpen(true)} className="border-1">
+                    <Button onClick={() => setIsCreateCategoryOpen(true)} className="border-1">
                         <span className="mr-2">+</span> Add Category
-                    </Button>
-                    <Button onClick={() => setIsCreateItemOpen(true)} className="border-1">
-                        <span className="mr-2">+</span> Add Item
                     </Button>
                 </div>
             </div>
@@ -147,16 +108,9 @@ const InventoryPage = () => {
                 {loading ? (
                     <LoadingSpinner />
                 ) : (
-                    <DataTable columns={columns} data={filteredData} />
+                    <DataTable columns={columns} data={filteredData} /> // Use categoryColumns
                 )}
             </div>
-            {isCreateItemOpen && (
-                <CreateItemComponent
-                    isOpen={isCreateItemOpen}
-                    onClose={handleCloseCreateItem}
-                    onCreate={handleCreateItem}
-                />
-            )}
             {isCreateCategoryOpen && (
                 <CreateCategoryComponent
                     isOpen={isCreateCategoryOpen}
@@ -168,4 +122,4 @@ const InventoryPage = () => {
     );
 };
 
-export default InventoryPage;
+export default CategoriesPage;
