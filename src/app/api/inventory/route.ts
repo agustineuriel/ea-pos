@@ -9,6 +9,7 @@ interface ItemRequest {
     quantity: number;
     reorder_threshold: number;
     category_id: number;
+    supplier_id: number; // Added supplier_id
 }
 
 interface SystemLogRequest {
@@ -18,9 +19,9 @@ interface SystemLogRequest {
 
 export async function POST(request: Request) {
     try {
-        const { unit, description, quantity, reorder_threshold, category_id, price } = await request.json() as ItemRequest & { price: number };
+        const { unit, description, quantity, reorder_threshold, category_id, price, supplier_id } = await request.json() as ItemRequest & { price: number };
 
-        if (!unit || !description || quantity === undefined || reorder_threshold === undefined || !category_id || price === undefined) {
+        if (!unit || !description || quantity === undefined || reorder_threshold === undefined || !category_id || price === undefined || supplier_id === undefined) { // Added supplier_id to the check
             return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400 });
         }
 
@@ -29,18 +30,19 @@ export async function POST(request: Request) {
         const parsedReorderThreshold = Number(reorder_threshold);
         const parsedCategoryId = Number(category_id);
         const parsedPrice = Number(price);
+        const parsedSupplierId = Number(supplier_id); // Parse supplier_id
 
         // Validate input types
-        if (isNaN(parsedQuantity) || isNaN(parsedReorderThreshold) || isNaN(parsedCategoryId) || isNaN(parsedPrice)) {
-            return new Response(JSON.stringify({ error: 'quantity, reorder_threshold, category_id, and price must be valid numbers' }), { status: 400 });
+        if (isNaN(parsedQuantity) || isNaN(parsedReorderThreshold) || isNaN(parsedCategoryId) || isNaN(parsedPrice) || isNaN(parsedSupplierId)) { // Added isNaN check for supplier_id
+            return new Response(JSON.stringify({ error: 'quantity, reorder_threshold, category_id, price, and supplier_id must be valid numbers' }), { status: 400 });
         }
 
         // Consider adding validation for string lengths, allowed characters, etc.
 
         // Removed id from the query. Assuming item_id is auto-generated (SERIAL)
         const result = await pool.query(
-            'INSERT INTO item (unit, description, quantity, reorder_threshold, category_id, price) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [unit, description, quantity, reorder_threshold, category_id, price]
+            'INSERT INTO item (unit, description, quantity, reorder_threshold, category_id, price, supplier_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', // Added supplier_id to query
+            [unit, description, quantity, reorder_threshold, category_id, price, supplier_id] // Added supplier_id to values
         );
 
         const newItem = result.rows[0];
@@ -139,7 +141,7 @@ export async function DELETE(request: Request) {
             return new Response(JSON.stringify({ error: 'Item not found' }), { status: 404 });
         }
 
-        const deletedItem = result.rows;
+        const deletedItem = result.rows[0];
         return new Response(JSON.stringify({ message: 'Item deleted', data: deletedItem }), { status: 200 });
     } catch (error: any) {
         const errorMessage = error.message || "An unknown error occurred";
