@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EA Street Motoshop POS
 
-## Getting Started
+## Deployment
 
-First, run the development server:
+Follow these steps to get the project up and running:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1.  **Clone the repository:**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+    ```bash
+    git clone <repository_url>
+    ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    Replace `<repository_url>` with the actual URL of your project's Git repository.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2.  **Navigate to the project directory and install dependencies:**
 
-## Learn More
+    ```bash
+    cd your-project-name
+    pnpm i
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+    This command uses `pnpm` to install all the necessary packages defined in the `package.json` file. Make sure you have `pnpm` installed globally on your system. If not, you can install it using `npm install -g pnpm`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3.  **Create a `.env` file and configure environment variables:**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    In the root of your project directory, create a new file named `.env`. Inside this file, add the following environment variable, replacing `<database key>` with your actual database connection string:
 
-## Deploy on Vercel
+    ```
+    DATABASE_URL = '<database key>'
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    **Important:** Ensure that this `.env` file is not committed to your version control system for security reasons. It typically contains sensitive information.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4.  **Start the development server:**
+
+    ```bash
+    pnpm run dev
+    ```
+
+    This command will execute the development script defined in your `package.json` file, usually starting a local development server. You should see output in your terminal indicating the server has started and the address it's running on (e.g., `http://localhost:3000`).
