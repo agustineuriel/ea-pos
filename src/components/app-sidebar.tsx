@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   Sidebar,
   SidebarContent,
@@ -19,27 +19,40 @@ const items = [
     title: "📊 Dashboard",
     url: "/",
   },
-   {
-    title: "📦 Inventory",
-    url: "/inventory",
-  },
-   {
+  {
     title: "🛒 Create Order",
     url: "/order",
   },
-   {
+  {
+    title: "👥 Customers",
+    url: "/customers",
+  },
+  {
+    title: "🚚 Suppliers",
+    url: "/suppliers",
+  },
+  {
+    title: "📝 Categories",
+    url: "/categories",
+  },
+  {
+    title: "📦 Inventory",
+    url: "/inventory",
+  },
+
+  {
     title: "📑 Order History",
     url: "/order-history",
   },
-   {
+  {
     title: "💵 Create Invoice",
     url: "/invoice",
   },
-   {
+  {
     title: "🧾 Invoice History",
     url: "/invoice-history",
   },
-     {
+  {
     title: "⚙️ System Logs",
     url: "/system-logs",
   },
@@ -47,11 +60,19 @@ const items = [
 
 export function AppSidebar() {
   return (
-    <Sidebar>
+    <Sidebar className="bg-white">
       <div className="flex justify-center items-center mt-4">
-      <Image src="/logo.png" height={200} width={200} alt="Logo" className="flex justify-center items-center" />
+        <Image
+          src="/logo.png"
+          height={200}
+          width={200}
+          alt="Logo"
+          className="flex justify-center items-center"
+        />
       </div>
-      <h1 className="flex justify-center text-center text-3xl font-bold text-[#212121]">EA Street Motoshop POS</h1>
+      <h1 className="flex justify-center text-center text-3xl font-bold">
+        EA Street Motoshop POS
+      </h1>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>
@@ -70,19 +91,17 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarMenu>
-            <SidebarMenuItem key="logout">
-              <SidebarMenuButton asChild>
-              <button 
-            //   onClick={() => signOut()}
+          <SidebarMenuItem key="logout">
+            <SidebarMenuButton asChild>
+              <button
+              //   onClick={() => signOut()}
               >
-              <span>🚪 Logout</span>
-            </button>
-
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+                <span>🚪 Logout</span>
+              </button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>
-    
   );
 }
