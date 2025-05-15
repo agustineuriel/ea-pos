@@ -41,8 +41,8 @@ const items = [
   },
 
   {
-    title: "📑 Order History",
-    url: "/order-history",
+    title: "📑 Transaction History",
+    url: "/transaction-history",
   },
   {
     title: "💵 Create Invoice",
@@ -60,7 +60,7 @@ const items = [
 
 export function AppSidebar() {
   return (
-    <Sidebar className="bg-white">
+    <Sidebar className="print:hidden">
       <div className="flex justify-center items-center mt-4">
         <Image
           src="/logo.png"

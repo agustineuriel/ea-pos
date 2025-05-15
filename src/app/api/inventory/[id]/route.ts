@@ -8,9 +8,9 @@ interface UpdateItemRequest {
     description: string;
     quantity: number;
     reorder_threshold: number;
-    category_id: number;
+    category_name: number;
     price: number;
-    supplier_id: number; // Added supplier_id
+    supplier_name: number; // Added supplier_name
 }
 
 export async function PATCH(
@@ -19,18 +19,18 @@ export async function PATCH(
 ) {
     try {
         console.log("PATCH /api/item/[id] called");
-        const id = params.id;
+        const id = await params.id;
         console.log("id:", id);
         const {
             unit,
             description,
             quantity,
             reorder_threshold,
-            category_id,
+            category_name,
             price,
-            supplier_id, // Destructured supplier_id
+            supplier_name,
         } = await request.json() as UpdateItemRequest;
-        console.log("Request body:", { unit, description, quantity, reorder_threshold, category_id, price, supplier_id });
+        console.log("Request body:", { unit, description, quantity, reorder_threshold, category_name, price, supplier_name });
 
         if (!id) {
             const errorResponse = { error: 'Item ID is required' };
@@ -44,13 +44,13 @@ export async function PATCH(
                  description = $2, 
                  quantity = $3, 
                  reorder_threshold = $4, 
-                 category_id = $5,
+                 category_name = $5,
                  price = $6,
-                 supplier_id = $7,
+                 supplier_name = $7,
                  updated_at = NOW() 
                WHERE item_id = $8
                RETURNING *`,
-            [unit, description, quantity, reorder_threshold, category_id, price, supplier_id, id] // Added supplier_id to parameters
+            [unit, description, quantity, reorder_threshold, category_name, price, supplier_name, id] // Added supplier_name to parameters
         );
         console.log("result.rowCount:", result.rowCount);
 

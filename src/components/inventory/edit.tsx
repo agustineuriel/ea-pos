@@ -43,14 +43,13 @@ const EditItemComponent: React.FC<EditItemComponentProps> = ({
     isEditOpen,
     onClose,
 }) => {
-    const [editedItem, setEditedItem] = useState<
-        Omit<Item, "supplier_name" | "category_name">
-    >({ ...item }); // Initialize with item data, exclude names
+    const [editedItem, setEditedItem] = useState<Item>({ ...item }); // Initialize with item data
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [categoryName, setCategoryName] = useState<string>("");
     const [supplierName, setSupplierName] = useState<string>("");
+    const [originalItem, setOriginalItem] = useState<Item>({ ...item }); // Store original item
 
     useEffect(() => {
         const fetchCategoriesAndSuppliers = async () => {
@@ -71,74 +70,77 @@ const EditItemComponent: React.FC<EditItemComponentProps> = ({
         // Initialize form with item data when the dialog opens
         if (isEditOpen) {
             setEditedItem({ ...item });
+            setOriginalItem({ ...item }); // Store a copy of the original item
             fetchCategoriesAndSuppliers(); // Fetch dropdown data
         }
     }, [isEditOpen, item]);
 
-    // Update category/supplier names when their IDs change.  This is important
-    // to keep the dropdowns correctly reflect the *current* item's values.
+    // Update category/supplier names.
     useEffect(() => {
-        if (editedItem.category_id && categories.length > 0) {
-            const selectedCategory = categories.find(c => c.category_id === editedItem.category_id);
+        if (editedItem.category_name && categories.length > 0) {
+            const selectedCategory = categories.find(c => c.category_name === editedItem.category_name);
             setCategoryName(selectedCategory ? selectedCategory.category_name : "");
         }
-        if (editedItem.supplier_id && suppliers.length > 0) {
-            const selectedSupplier = suppliers.find(s => s.supplier_id === editedItem.supplier_id);
+        if (editedItem.supplier_name && suppliers.length > 0) {
+            const selectedSupplier = suppliers.find(s => s.supplier_name === editedItem.supplier_name);
             setSupplierName(selectedSupplier ? selectedSupplier.supplier_name : "");
         }
-    }, [editedItem.category_id, editedItem.supplier_id, categories, suppliers]);
+    }, [editedItem.category_name, editedItem.supplier_name, categories, suppliers]);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
+        let parsedValue: string | number = value;
+        if (id === 'quantity' || id === 'reorder_threshold' || id === 'price') {
+            parsedValue = Number(value);
+            if (isNaN(parsedValue)) {
+                parsedValue = 0;
+            }
+        }
         setEditedItem(prev => ({
             ...prev,
-            [id]: id === 'quantity' || id === 'reorder_threshold' || id === 'category_id' || id === 'price' || id === 'supplier_id'
-                ? Number(value)
-                : value
+            [id]: parsedValue,
         }));
     };
 
     const handleCategorySelect = (value: string) => {
-        const categoryId = Number(value);
-        setEditedItem(prev => ({ ...prev, category_id: categoryId }));
-        const selectedCategory = categories.find(c => c.category_id === categoryId);
-        setCategoryName(selectedCategory ? selectedCategory.category_name : "");
+        const selectedCategoryName = value;
+        setEditedItem(prev => ({ ...prev, category_name: selectedCategoryName }));
+        setCategoryName(selectedCategoryName);
     };
 
     const handleSupplierSelect = (value: string) => {
-        const supplierId = Number(value);
-        setEditedItem(prev => ({ ...prev, supplier_id: supplierId }));
-        const selectedSupplier = suppliers.find(s => s.supplier_id === supplierId);
-        setSupplierName(selectedSupplier ? selectedSupplier.supplier_name : "");
+        const selectedSupplierName = value;
+        setEditedItem(prev => ({ ...prev, supplier_name: selectedSupplierName }));
+        setSupplierName(selectedSupplierName);
     };
 
     const handleEditItem = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`/api/update-quantity/${item.item_id}`, { 
-                method: 'PATCH', 
+            await fetch(`/api/inventory/${editedItem.item_id}`, {
+                method: "PATCH",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify(editedItem),
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Failed to update item: ${response.status}`);
-            }
-
-            const updatedItemData = await response.json();
             onClose();
-            alert(updatedItemData.message || 'Item updated successfully!');
-            window.location.reload(); // Reload to reflect changes
+
+            alert('Item updated successfully!');
+            window.location.reload();
+
         } catch (error: any) {
             console.error("Error updating item:", error);
             alert(`Error: ${error.message || 'Failed to update item'}`);
         } finally {
             setLoading(false);
         }
+    };
+
+    const hasChanges = () => {
+        return JSON.stringify(editedItem) !== JSON.stringify(originalItem);
     };
 
     return (
@@ -191,7 +193,7 @@ const EditItemComponent: React.FC<EditItemComponentProps> = ({
                         </Label>
                         <Input
                             id="price"
-                            value={editedItem.price}
+                            value={editedItem.price.toString()}
                             onChange={handleInputChange}
                             className="col-span-3"
                         />
@@ -223,16 +225,16 @@ const EditItemComponent: React.FC<EditItemComponentProps> = ({
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="category_id" className="text-right">
+                        <Label htmlFor="category_name" className="text-right">
                             Category
                         </Label>
-                        <Select onValueChange={handleCategorySelect} value={editedItem.category_id.toString()}>
+                        <Select onValueChange={handleCategorySelect} value={editedItem.category_name}>
                             <SelectTrigger className="col-span-3 w-full">
                                 <SelectValue placeholder="Select a category" />
                             </SelectTrigger>
                             <SelectContent>
                                 {categories.map((category) => (
-                                    <SelectItem key={category.category_id} value={category.category_id.toString()}>
+                                    <SelectItem key={category.category_id} value={category.category_name}>
                                         {category.category_name}
                                     </SelectItem>
                                 ))}
@@ -240,16 +242,16 @@ const EditItemComponent: React.FC<EditItemComponentProps> = ({
                         </Select>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="supplier_id" className="text-right">
+                        <Label htmlFor="supplier_name" className="text-right">
                             Supplier
                         </Label>
-                        <Select onValueChange={handleSupplierSelect} value={editedItem.supplier_id.toString()}>
+                        <Select onValueChange={handleSupplierSelect} value={editedItem.supplier_name}>
                             <SelectTrigger className="col-span-3 w-full">
                                 <SelectValue placeholder="Select a supplier" />
                             </SelectTrigger>
                             <SelectContent>
                                 {suppliers.map((supplier) => (
-                                    <SelectItem key={supplier.supplier_id} value={supplier.supplier_id.toString()}>
+                                    <SelectItem key={supplier.supplier_id} value={supplier.supplier_name}>
                                         {supplier.supplier_name}
                                     </SelectItem>
                                 ))}
@@ -268,7 +270,7 @@ const EditItemComponent: React.FC<EditItemComponentProps> = ({
                             "bg-blue-500 hover:bg-blue-600 text-white",
                             loading && "opacity-50 cursor-not-allowed"
                         )}
-                        disabled={loading}
+                        disabled={loading || !hasChanges()}
                     >
                         {loading ? 'Saving...' : 'Save'}
                     </Button>

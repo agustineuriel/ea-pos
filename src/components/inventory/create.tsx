@@ -26,7 +26,7 @@ interface CreateItemComponentProps {
     isOpen: boolean;
     onClose: () => void;
     onCreate: (
-        newItem: Omit<Item, "item_id" | "created_at" | "updated_at" | "supplier_name" | "category_name">
+        newItem: Omit<Item, "item_id" | "created_at" | "updated_at">
     ) => void; // Callback for creating
 }
 
@@ -40,14 +40,18 @@ interface Supplier {
     supplier_name: string;
 }
 
+// Extend the Omit type to include supplier_id and category_id
+type NewItemState = Omit<Item, "item_id" | "created_at" | "updated_at" | "supplier_name" | "category_name"> & {
+    supplier_id: number;
+    category_id: number;
+};
+
 const CreateItemComponent: React.FC<CreateItemComponentProps> = ({
     isOpen,
     onClose,
     onCreate,
 }) => {
-    const [newItem, setNewItem] = useState<
-        Omit<Item, "item_id" | "created_at" | "updated_at" | "supplier_name" | "category_name">
-    >({
+    const [newItem, setNewItem] = useState<NewItemState>({
         // Initialize with empty item
         unit: "",
         description: "",
@@ -62,6 +66,7 @@ const CreateItemComponent: React.FC<CreateItemComponentProps> = ({
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [categoryName, setCategoryName] = useState<string>("");
     const [supplierName, setSupplierName] = useState<string>("");
+    const [isFormValid, setIsFormValid] = useState(false);
 
 
     useEffect(() => {
@@ -85,14 +90,31 @@ const CreateItemComponent: React.FC<CreateItemComponentProps> = ({
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        // Check if all required fields are filled and valid.
+        setIsFormValid(
+            newItem.unit !== "" &&
+            newItem.description !== "" &&
+            newItem.price >= 0 &&
+            newItem.quantity > 0 &&
+            newItem.reorder_threshold >= 0 &&
+            newItem.category_id !== 0 &&
+            newItem.supplier_id !== 0
+        );
+    }, [newItem]);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
+        let parsedValue: string | number = value;
+        if (id === "quantity" || id === "reorder_threshold" || id === "price" || id === "category_id" || id === "supplier_id") {
+            parsedValue = Number(value);
+            if (isNaN(parsedValue)) {
+                parsedValue = 0;
+            }
+        }
         setNewItem((prev) => ({
             ...prev,
-            [id]:
-                id === "quantity" || id === "reorder_threshold" || id === "category_id" || id === "supplier_id"
-                    ? Number(value)
-                    : value,
+            [id]: parsedValue,
         }));
     };
 
@@ -125,11 +147,25 @@ const CreateItemComponent: React.FC<CreateItemComponentProps> = ({
                 throw new Error("Please fill in all fields with valid values.");
             }
 
+            // Find the selected category and supplier names.
+            const selectedCategory = categories.find(c => c.category_id === newItem.category_id);
+            const selectedSupplier = suppliers.find(s => s.supplier_id === newItem.supplier_id);
+
+            if (!selectedCategory || !selectedSupplier) {
+                throw new Error("Selected category or supplier not found.");
+            }
+
+            const newItemWithNames: Omit<Item, "item_id" | "created_at" | "updated_at"> = {
+                ...newItem,
+                category_name: selectedCategory.category_name,
+                supplier_name: selectedSupplier.supplier_name,
+            };
+
             // Simulate network delay
             await new Promise((resolve) => setTimeout(resolve, 500));
 
             // Callback to parent component to handle actual creation
-            onCreate(newItem);
+            onCreate(newItemWithNames);
 
             // Reset the form
             setNewItem({
@@ -266,7 +302,7 @@ const CreateItemComponent: React.FC<CreateItemComponentProps> = ({
                             "bg-green-500 hover:bg-green-600 text-white",
                             loading && "opacity-50 cursor-not-allowed"
                         )}
-                        disabled={loading}
+                        disabled={loading || !isFormValid}
                     >
                         {loading ? "Creating..." : "Create"}
                     </Button>
@@ -277,3 +313,4 @@ const CreateItemComponent: React.FC<CreateItemComponentProps> = ({
 };
 
 export default CreateItemComponent;
+
