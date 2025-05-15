@@ -3,12 +3,48 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-interface UpdateCustomerRequest {
+interface Customer {
     customer_name: string;
     customer_address: string;
     customer_email: string;
     customer_number?: string;
 }
+
+export const GET = async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) => {
+    try {
+        const customerId = params.id;
+
+        if (!customerId) {
+            return NextResponse.json({ error: 'Customer ID is required' }, { status: 400 });
+        }
+
+        const query = `
+            SELECT * FROM customer 
+            WHERE customer_id = $1
+        `;
+
+        const result = await pool.query<Customer>(query, [customerId]);
+
+        if (result.rows.length === 0) {
+            return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+        }
+
+        const customer: Customer = result.rows[0];
+        return NextResponse.json({ data: customer }, { status: 200 });
+    } catch (error: any) {
+        // Log the full error for debugging
+        console.error('Error fetching customer:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch customer', details: error.message },
+            { status: 500 }
+        );
+    }
+};
+
+
 
 export async function PATCH(
     request: NextRequest,
@@ -18,7 +54,7 @@ export async function PATCH(
         console.log("PATCH /api/customers/[id] called"); // Changed log
         const id = params.id;
         console.log("id:", id);
-        const { customer_name, customer_address, customer_email, customer_number } = await request.json() as UpdateCustomerRequest;
+        const { customer_name, customer_address, customer_email, customer_number } = await request.json() as Customer;
         console.log("Request body:", { customer_name, customer_address, customer_email, customer_number });
 
 
