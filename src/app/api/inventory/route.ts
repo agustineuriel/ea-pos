@@ -8,8 +8,8 @@ interface ItemRequest {
     description: string;
     quantity: number;
     reorder_threshold: number;
-    category_id: number;
-    supplier_id: number; // Added supplier_id
+    category_name: number;
+    supplier_name: number; 
 }
 
 interface SystemLogRequest {
@@ -19,30 +19,28 @@ interface SystemLogRequest {
 
 export async function POST(request: Request) {
     try {
-        const { unit, description, quantity, reorder_threshold, category_id, price, supplier_id } = await request.json() as ItemRequest & { price: number };
+        const { unit, description, quantity, reorder_threshold, category_name, price, supplier_name } = await request.json() as ItemRequest & { price: number };
 
-        if (!unit || !description || quantity === undefined || reorder_threshold === undefined || !category_id || price === undefined || supplier_id === undefined) { // Added supplier_id to the check
+        if (!unit || !description || quantity === undefined || reorder_threshold === undefined || !category_name || price === undefined || supplier_name === undefined) { // Added supplier_name to the check
             return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400 });
         }
 
         // Convert input values to numbers
         const parsedQuantity = Number(quantity);
         const parsedReorderThreshold = Number(reorder_threshold);
-        const parsedCategoryId = Number(category_id);
         const parsedPrice = Number(price);
-        const parsedSupplierId = Number(supplier_id); // Parse supplier_id
 
         // Validate input types
-        if (isNaN(parsedQuantity) || isNaN(parsedReorderThreshold) || isNaN(parsedCategoryId) || isNaN(parsedPrice) || isNaN(parsedSupplierId)) { // Added isNaN check for supplier_id
-            return new Response(JSON.stringify({ error: 'quantity, reorder_threshold, category_id, price, and supplier_id must be valid numbers' }), { status: 400 });
+        if (isNaN(parsedQuantity) || isNaN(parsedReorderThreshold) || isNaN(parsedPrice)) { // Added isNaN check for supplier_name
+            return new Response(JSON.stringify({ error: 'quantity, reorder_threshold, category_name, price, and supplier_name must be valid numbers' }), { status: 400 });
         }
 
         // Consider adding validation for string lengths, allowed characters, etc.
 
         // Removed id from the query. Assuming item_id is auto-generated (SERIAL)
         const result = await pool.query(
-            'INSERT INTO item (unit, description, quantity, reorder_threshold, category_id, price, supplier_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', // Added supplier_id to query
-            [unit, description, quantity, reorder_threshold, category_id, price, supplier_id] // Added supplier_id to values
+            'INSERT INTO item (unit, description, quantity, reorder_threshold, category_name, price, supplier_name) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *', // Added supplier_name to query
+            [unit, description, quantity, reorder_threshold, category_name, price, supplier_name] // Added supplier_name to values
         );
 
         const newItem = result.rows[0];
@@ -65,88 +63,6 @@ export async function GET(request: Request) {
         const errorMessage = error.message || "An unknown error occurred";
         console.error('Error getting items:', errorMessage);
         return new Response(JSON.stringify({ error: 'Failed to get items', details: errorMessage }), { status: 500 });
-    }
-}
-
-export async function PATCH(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
-        const { unit, description, quantity, reorder_threshold, category_id } = await request.json() as ItemRequest;
-
-        if (!id) {
-            return new Response(JSON.stringify({ error: 'id is required for update' }), { status: 400 });
-        }
-
-        const updates: (string | number)[] = [];
-        let queryParts = ['UPDATE item SET'];
-        let paramIndex = 1;
-
-        if (unit) {
-            queryParts.push(`unit = $${paramIndex++}`);
-            updates.push(unit);
-        }
-        if (description) {
-            queryParts.push(`description = $${paramIndex++}`);
-            updates.push(description);
-        }
-        if (quantity !== undefined) {
-            queryParts.push(`quantity = $${paramIndex++}`);
-            updates.push(quantity);
-        }
-        if (reorder_threshold !== undefined) {
-            queryParts.push(`reorder_threshold = $${paramIndex++}`);
-            updates.push(reorder_threshold);
-        }
-        if (category_id !== undefined) {
-            queryParts.push(`category_id = $${paramIndex++}`);
-            updates.push(category_id);
-        }
-
-        if (updates.length === 0) {
-            return new Response(JSON.stringify({ error: 'No fields to update' }), { status: 400 });
-        }
-
-        queryParts.push(`WHERE item_id = $${paramIndex++} RETURNING *`);
-        updates.push(id);
-
-        const query = queryParts.join(' ');
-        const result = await pool.query(query, updates);
-
-        if (result.rowCount === 0) {
-            return new Response(JSON.stringify({ error: 'Item not found' }), { status: 404 });
-        }
-
-        const updatedItem = result.rows[0];
-        return new Response(JSON.stringify({ message: 'Item updated', data: updatedItem }), { status: 200 });
-    } catch (error: any) {
-        const errorMessage = error.message || "An unknown error occurred";
-        console.error('Error updating item:', errorMessage);
-        return new Response(JSON.stringify({ error: 'Failed to update item', details: errorMessage }), { status: 500 });
-    }
-}
-
-export async function DELETE(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
-
-        if (!id) {
-            return new Response(JSON.stringify({ error: 'id is required for deletion' }), { status: 400 });
-        }
-
-        const result = await pool.query('DELETE FROM item WHERE item_id = $1 RETURNING *', [id]);
-
-        if (result.rowCount === 0) {
-            return new Response(JSON.stringify({ error: 'Item not found' }), { status: 404 });
-        }
-
-        const deletedItem = result.rows[0];
-        return new Response(JSON.stringify({ message: 'Item deleted', data: deletedItem }), { status: 200 });
-    } catch (error: any) {
-        const errorMessage = error.message || "An unknown error occurred";
-        console.error('Error deleting item:', errorMessage);
-        return new Response(JSON.stringify({ error: 'Failed to delete item', details: errorMessage }), { status: 500 });
     }
 }
 
