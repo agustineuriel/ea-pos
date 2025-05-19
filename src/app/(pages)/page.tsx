@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import LoadingSpinner from '@/components/loading-indicator';
-import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { AnimatePresence, motion } from 'framer-motion';
