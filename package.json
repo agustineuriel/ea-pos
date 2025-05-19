@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/pg-adapter": "^1.9.1",
     "@auth0/auth0-react": "^2.3.0",
     "@neondatabase/serverless": "^1.0.0",
     "@radix-ui/react-alert-dialog": "^1.1.13",
@@ -25,12 +26,15 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.12.1",
     "lucide-react": "^0.510.0",
     "next": "15.3.2",
+    "next-auth": "^4.24.11",
     "pg": "^8.16.0",
     "react": "^19.0.0",
     "react-day-picker": "8.10.1",
     "react-dom": "^19.0.0",
+    "recharts": "^2.15.3",
     "tailwind-merge": "^3.3.0",
     "uuid": "^11.1.0"
   },
