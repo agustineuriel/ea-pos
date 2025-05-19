@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-// import { signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 
 import Image from "next/image";
 
@@ -90,7 +90,7 @@ export function AppSidebar() {
           <SidebarMenuItem key="logout">
             <SidebarMenuButton asChild>
               <button
-              //   onClick={() => signOut()}
+                onClick={() => signOut()}
               >
                 <span>🚪 Logout</span>
               </button>
