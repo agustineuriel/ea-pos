@@ -15,7 +15,7 @@ export const GET = async (
     { params }: { params: { id: string } }
 ) => {
     try {
-        const customerId = params.id;
+        const customerId = await params.id;
 
         if (!customerId) {
             return NextResponse.json({ error: 'Customer ID is required' }, { status: 400 });

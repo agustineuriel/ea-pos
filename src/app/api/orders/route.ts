@@ -4,6 +4,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 interface OrderRequest {
     customer_id: number;
+    customer_name: string;
     admin_name: string;
     order_date: Date;
     order_status: string;
@@ -14,7 +15,7 @@ interface OrderRequest {
 // Endpoint to create a new order
 export async function POST(request: Request) {
     try {
-        let { customer_id, admin_name, order_date, order_status, order_total_price } = await request.json() as OrderRequest;
+        let { customer_id, customer_name, admin_name, order_date, order_status, order_total_price } = await request.json() as OrderRequest;
 
         // Convert order_date string to Date object if needed
         if (typeof order_date === 'string') {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
         }
 
         // Input validation: Check for required fields
-        if (customer_id === undefined || !admin_name || !order_date || !order_status || order_total_price === undefined) {
+        if (customer_id === undefined || !customer_name  || !admin_name || !order_date || !order_status || order_total_price === undefined) {
             return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400 });
         }
 
@@ -40,8 +41,8 @@ export async function POST(request: Request) {
 
         const now = new Date(); // Get current timestamp
         const result = await pool.query(
-            'INSERT INTO "order" (customer_id, admin_name, order_date, order_status, order_total_price, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $6) RETURNING *', // Added created_at and updated_at
-            [customer_id, admin_name, order_date, order_status, order_total_price, now]
+            'INSERT INTO "order" (customer_id, admin_name, order_date, order_status, order_total_price, created_at, updated_at, customer_name) VALUES ($1, $2, $3, $4, $5, $6, $6, $7) RETURNING *', // Added created_at and updated_at
+            [customer_id, admin_name, order_date, order_status, order_total_price, now, customer_name]
         );
 
         const newOrder = result.rows[0];
