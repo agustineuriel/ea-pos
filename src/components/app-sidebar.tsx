@@ -49,10 +49,6 @@ const items = [
     url: "/invoice",
   },
   {
-    title: "🧾 Invoice History",
-    url: "/invoice-history",
-  },
-  {
     title: "⚙️ System Logs",
     url: "/system-logs",
   },
