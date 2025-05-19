@@ -225,15 +225,19 @@ const InvoicePage: React.FC = () => {
 
 
             <div className="flex justify-between mb-6">
-                <Card className="w-1/2 mr-4">
+                <Card className="w-full">
                     <CardHeader>
                         <CardTitle>Order Details</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex flex-row justify-between">
+                        <div className="grid grid-cols-2 gap-2 mt-4">
                             {" "}
                             <p>
                                 <strong>Order ID:</strong> {order.order_id}
+                            </p>
+                            <div className="flex flex-row gap-2 items-center">
+                                                        <p>
+                                <strong>Order Status:</strong>
                             </p>
                             <Badge
                                 variant={getStatusBadgeVariant(order.order_status)}
@@ -251,7 +255,7 @@ const InvoicePage: React.FC = () => {
                             >
                                 {order.order_status}
                             </Badge>
-                        </div>
+                            </div>
                         <p>
                             <strong>Customer Name:</strong> {customer.customer_name}
                         </p>
@@ -274,10 +278,7 @@ const InvoicePage: React.FC = () => {
                                 year: "numeric",
                             })}
                         </p>
-                        <p>
-                            <strong>Total Price:</strong>{" "}
-                            {formatCurrency(order.order_total_price)}
-                        </p>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
