@@ -21,14 +21,14 @@ interface OrderItem {
     subtotal: number;
     created_at: string;
     updated_at: string;
-    // You might need to add other properties based on your actual table structure
+
 }
 
 export const GET = async (
     request: NextRequest,
     { params }: { params: { id: string } }
 ) => {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id || id === 'null') {
         return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
@@ -61,3 +61,113 @@ export const GET = async (
         );
     }
 };
+
+export const DELETE = async (
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) => {
+  const { id } = params;
+
+  if (!id || id === 'null') {
+    return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+  }
+
+  const client = await pool.connect(); // Get a client from the pool
+
+  try {
+    await client.query('BEGIN'); // Start a transaction
+
+    // Delete from order_item first (to avoid foreign key constraint issues)
+    const deleteOrderItemsResult = await client.query(
+      'DELETE FROM order_item WHERE order_id = $1',
+      [id]
+    );
+    //console.log(`Deleted ${deleteOrderItemsResult.rowCount} items from order_item`);
+
+
+    // Delete the order itself
+    const deleteOrderResult = await client.query('DELETE FROM "order" WHERE order_id = $1', [id]);
+
+    if (deleteOrderResult.rowCount === 0) {
+      await client.query('ROLLBACK'); // Rollback if order not found
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+    //console.log(`Deleted ${deleteOrderResult.rowCount} order from order`);
+
+    await client.query('COMMIT'); // Commit the transaction
+    return NextResponse.json({ message: 'Order and related items deleted successfully' }, { status: 200 });
+  } catch (error: any) {
+    await client.query('ROLLBACK'); // Rollback on any error
+    console.error('Error deleting order and related items:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete order and related items: ' + error.message },
+      { status: 500 }
+    );
+  } finally {
+    client.release(); // Return the client to the pool
+  }
+};
+
+// Endpoint to update order status
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+    const orderId = await parseInt(params.id, 10);
+
+    if (isNaN(orderId)) {
+        return new Response(JSON.stringify({ error: 'Invalid order ID' }), { status: 400 });
+    }
+
+    try {
+        const { order_status, order_total_price } = await request.json();
+
+        if (!order_status) {
+            return new Response(JSON.stringify({ error: 'Order status is required' }), { status: 400 });
+        }
+
+        if (typeof order_status !== 'string') {
+            return new Response(JSON.stringify({ error: 'Invalid data type for order status' }), { status: 400 });
+        }
+
+        if (!['pending', 'processing', 'shipped', 'delivered', 'cancelled'].includes(order_status.toLowerCase())) {
+            return new Response(JSON.stringify({ error: 'Invalid order status' }), { status: 400 });
+        }
+
+        const now = new Date();
+        const client = await pool.connect(); // Get a client from the pool
+        try {
+            await client.query('BEGIN'); // Start a transaction
+
+            // Update the order status
+            const orderUpdateResult = await client.query(
+                'UPDATE "order" SET order_status = $1 WHERE order_id = $2 RETURNING *',
+                [order_status, orderId]
+            );
+
+            if (orderUpdateResult.rowCount === 0) {
+                await client.query('ROLLBACK');
+                return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404 });
+            }
+             if (order_status.toLowerCase() === 'cancelled') {
+                //update order_total_price
+                await client.query(
+                    'UPDATE "order" SET order_total_price = 0 WHERE order_id = $1',
+                    [orderId]
+                );
+            }
+
+            const updatedOrder = orderUpdateResult.rows[0];
+
+            await client.query('COMMIT'); // Commit the transaction
+             return new Response(JSON.stringify({ message: 'Order status updated successfully', data: updatedOrder }), { status: 200 });
+        } catch (error: any) {
+            await client.query('ROLLBACK'); // Rollback the transaction on error
+            console.error('Error updating order status:', error);
+            return new Response(JSON.stringify({ error: 'Failed to update order status', details: error.message }), { status: 500 });
+        } finally {
+            client.release(); // Return the client to the pool
+        }
+    } catch (error: any) {
+        console.error('Error updating order status:', error);
+        return new Response(JSON.stringify({ error: 'Failed to update order status', details: error.message }), { status: 500 });
+    }
+}
+
