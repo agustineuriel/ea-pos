@@ -29,7 +29,7 @@ const CreateOrderPage = () => {
   const [selectedCustomerId, setSelectedCustomerId] = useState<
     number | undefined
   >();
-  const [orderDate, setOrderDate] = useState<Date | undefined>();
+  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date());
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [availableItems, setAvailableItems] = useState<Item[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<number | undefined>();
@@ -50,7 +50,6 @@ const CreateOrderPage = () => {
   const [isCreatingNewCustomer, setIsCreatingNewCustomer] = useState(false);
   const [orderTotalPrice, setOrderTotalPrice] = useState<number>(0);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-
   // Fetch items from the database
   const fetchItems = useCallback(async () => {
     try {
@@ -607,52 +606,21 @@ const CreateOrderPage = () => {
               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
             </Button>
           </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
               selected={orderDate}
               onSelect={setOrderDate}
-              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+              disabled={(date) =>
+                date < new Date(new Date().setHours(0, 0, 0, 0))
+              }
               initialFocus
             />
-            </PopoverContent>
+          </PopoverContent>
         </Popover>
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700">Items</label>
-        {orderItems.map((item) => (
-          <div
-            key={item.item_id}
-            className="flex items-center justify-between mb-2"
-          >
-            <div>
-              {item.description} ({item.quantity} {item.unit} x ₱
-              {item.unit_price}) Subtotal: ₱{item.subtotal}
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleRemoveItem(item.item_id)}
-              className="text-red-500 hover:text-red-700"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </Button>
-          </div>
-        ))}
         <div className="flex items-end gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700">
@@ -687,6 +655,7 @@ const CreateOrderPage = () => {
               </SelectContent>
             </Select>
           </div>
+
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700">
               Quantity
@@ -718,9 +687,63 @@ const CreateOrderPage = () => {
           </Button>
         </div>
       </div>
-
+      <div className="p-4 border rounded-md mb-4">
+        <label className="block text-sm font-medium text-gray-700">Items</label>
+        {orderItems.length === 0 ? (
+          <div className="text-gray-500 italic flex items-center justify-center">
+            No order items yet.
+          </div>
+        ) : (
+          orderItems.map((item) => (
+            <div
+              key={item.item_id}
+              className="flex items-center justify-between mb-2"
+            >
+              <div>
+                {item.description} ({item.quantity} {item.unit} x ₱
+                {item.unit_price.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+                ) Subtotal: ₱
+                {item.subtotal.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleRemoveItem(item.item_id)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </Button>
+            </div>
+          ))
+        )}
+      </div>
       <div className="mb-4">
-        <h2 className="text-lg font-semibold">Total Amount: ₱{totalAmount}</h2>
+        <h2 className="text-lg font-semibold">
+          Total Amount: ₱
+          {totalAmount.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </h2>
         <h2 className="text-lg font-semibold">
           Total Items:{" "}
           {orderItems.reduce((acc, item) => acc + item.quantity, 0)}
@@ -762,7 +785,13 @@ const CreateOrderPage = () => {
             <p>Admin Name: {order.admin_name}</p>
             <p>Order Date: {format(order.order_date, "PPP")}</p>
             <p>Order Status: {order.order_status}</p>
-            <p>Order Total Price: ₱{order.order_total_price}</p>
+            <p>
+              Order Total Price: ₱
+              {order.order_total_price.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
           </div>
         ))}
       </div>

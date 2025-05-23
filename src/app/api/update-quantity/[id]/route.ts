@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route"; 
+import { authOptions } from "../../auth/[...nextauth]/route";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -41,7 +41,7 @@ export async function PATCH(
 
     // Fetch the item before updating to include description and old quantity in the log
     const itemBeforeUpdateResult = await pool.query(
-      "SELECT description, quantity, reorder_threshold FROM item WHERE item_id = $1",
+      "SELECT description, quantity FROM item WHERE item_id = $1",
       [id]
     );
 
@@ -54,7 +54,6 @@ export async function PATCH(
     const result = await pool.query(
       `UPDATE item 
   SET quantity = $1, 
-  reorder_threshold = reorder_threshold + 1, 
   updated_at = NOW() 
   WHERE item_id = $2 
   RETURNING *`,
@@ -68,13 +67,13 @@ export async function PATCH(
     const updatedItem = result.rows[0];
 
     await createSystemLog(
-      `Item quantity and reorder threshold updated: ${itemBeforeUpdate.description} (ID: ${updatedItem.item_id}), quantity changed from ${itemBeforeUpdate.quantity} to ${updatedItem.quantity}, reorder threshold changed from ${itemBeforeUpdate.reorder_threshold} to ${updatedItem.reorder_threshold}`,
+      `Item quantity updated: ${itemBeforeUpdate.description} (ID: ${updatedItem.item_id}), quantity changed from ${itemBeforeUpdate.quantity} to ${updatedItem.quantity}`,
       loggedInUser
     );
 
     return NextResponse.json(
       {
-        message: "Item quantity and reorder threshold updated",
+        message: "Item quantity updated",
         data: updatedItem,
       },
       { status: 200 }

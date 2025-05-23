@@ -102,11 +102,11 @@ const CreateSupplierComponent: React.FC<CreateSupplierComponentProps> = ({
                 supplier_number: "", // Reset supplier_number
             });
             onClose();
-            alert("Supplier created successfully!");
+            // alert("Supplier created successfully!");
             window.location.reload();
         } catch (error: any) {
             console.error("Error creating supplier:", error);
-            alert(`Error: ${error.message || "Failed to create supplier"}`);
+            // alert(`Error: ${error.message || "Failed to create supplier"}`);
         } finally {
             setLoading(false);
         }

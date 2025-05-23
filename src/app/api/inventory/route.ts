@@ -40,8 +40,8 @@ export async function POST(request: Request) {
         const parsedReorderThreshold = Number(reorder_threshold);
         const parsedPrice = Number(price);
 
-        if (isNaN(parsedQuantity) || isNaN(parsedReorderThreshold) || isNaN(parsedPrice) || isNaN(Number(category_name)) || isNaN(Number(supplier_name))) {
-            return new Response(JSON.stringify({ error: 'quantity, reorder_threshold, category_name, price, and supplier_name must be valid numbers' }), { status: 400 });
+        if (isNaN(parsedQuantity) || isNaN(parsedReorderThreshold) || isNaN(parsedPrice) ) {
+            return new Response(JSON.stringify({ error: 'quantity, reorder_threshold, and price must be valid numbers' }), { status: 400 });
         }
 
         const result = await pool.query(

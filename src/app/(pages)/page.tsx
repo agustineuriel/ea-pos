@@ -6,7 +6,7 @@ import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import LoadingSpinner from '@/components/loading-indicator';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
+import { format, isSameMonth, parseISO } from "date-fns" // Import parseISO
 import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -34,12 +34,30 @@ const DashboardCard: React.FC<DashboardCardProps> = ({ title, description, value
 const DashboardPage = () => {
     const [totalRevenue, setTotalRevenue] = useState<number | string>("Loading...");
     const [totalOrders, setTotalOrders] = useState<number | string>("Loading...");
-    const [totalItems, setTotalItems] = useState<number | string>("Loading...");
+    const [totalItemsQuantity, setTotalItemsQuantity] = useState<number | string>("Loading...");
     const [totalSuppliers, setTotalSuppliers] = useState<number | string>("Loading...");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [revenuePerDay, setRevenuePerDay] = useState<{ date: string; revenue: number }[]>([]);
-    const [selectedMonth, setSelectedMonth] = useState(new Date());
+    const [selectedMonth, setSelectedMonth] = useState(new Date()); // Initialize with current date
+
+    // Function to handle month change for the filter
+    const handleMonthChange = (month: Date | undefined) => {
+        if (month) {
+            setSelectedMonth(month);
+        }
+    };
+
+    // Helper function for formatting currency
+    const formatCurrency = (value: number) => {
+        // Format as Philippine Peso (PHP) with 2 decimal places and comma separators
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(value);
+    };
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -63,47 +81,52 @@ const DashboardPage = () => {
                 const inventoryData = await inventoryRes.json();
                 const suppliersData = await suppliersRes.json();
 
-                // Extract orders array from response data
-                const ordersArray = ordersData?.data ?? [];
-                // Extract inventory array from response data
+                const allOrders = ordersData?.data ?? [];
                 const inventoryArray = inventoryData?.data ?? [];
-                // Extract suppliers array from response data
                 const suppliersArray = suppliersData?.data ?? [];
 
-                // Calculate total revenue
+                // Filter orders by selected month
+                const filteredOrders = allOrders.filter((order: any) =>
+                    isSameMonth(parseISO(order.created_at), selectedMonth)
+                );
+
+                // Calculate total revenue for the filtered month
                 let revenue = 0;
-                if (Array.isArray(ordersArray)) {
-                    revenue = ordersArray.reduce((sum, order) => {
+                if (Array.isArray(filteredOrders)) {
+                    revenue = filteredOrders.reduce((sum, order) => {
                         const price = typeof order.order_total_price === 'string'
                             ? parseFloat(order.order_total_price)
                             : order.order_total_price;
-                        return sum + price;
+                        return sum + (price || 0); // Ensure price is a number
                     }, 0);
                 }
-                setTotalRevenue(`₱${revenue.toFixed(2)}`);
-                setTotalOrders(ordersArray.length);
-                setTotalItems(inventoryArray.length);
-                setTotalSuppliers(suppliersArray.length);
+                setTotalRevenue(formatCurrency(revenue)); // Apply currency formatting
+                setTotalOrders(filteredOrders.length); // Total orders for the filtered month
+                setTotalSuppliers(suppliersArray.length); // Total suppliers (not month-filtered)
 
-                // Calculate revenue per day for the selected month
-                const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-                const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+                // Calculate total quantity of all items in inventory
+                let totalQuantity = 0;
+                if (Array.isArray(inventoryArray)) {
+                    totalQuantity = inventoryArray.reduce((sum, item: any) => {
+                        return sum + (item.quantity || 0); // Sum the quantity of each item
+                    }, 0);
+                }
+                setTotalItemsQuantity(totalQuantity); // Set the new total items quantity
 
+
+                // Calculate revenue per day for the selected month (using filteredOrders)
                 const dailyRevenue: { [date: string]: number } = {};
-                if (Array.isArray(ordersArray)) {
-                    ordersArray.forEach(order => {
-                        const orderDate = new Date(order.created_at);  // Assuming 'created_at' is the order date
-                        if (orderDate >= startOfMonth && orderDate <= endOfMonth) {
-                            const formattedDate = format(orderDate, 'yyyy-MM-dd');
-                            const price = typeof order.order_total_price === 'string'
-                                ? parseFloat(order.order_total_price)
-                                : order.order_total_price;
-                            dailyRevenue[formattedDate] = (dailyRevenue[formattedDate] || 0) + price;
-                        }
+                if (Array.isArray(filteredOrders)) {
+                    filteredOrders.forEach((order: any) => {
+                        const orderDate = new Date(order.created_at);
+                        const formattedDate = format(orderDate, 'yyyy-MM-dd');
+                        const price = typeof order.order_total_price === 'string'
+                            ? parseFloat(order.order_total_price)
+                            : order.order_total_price;
+                        dailyRevenue[formattedDate] = (dailyRevenue[formattedDate] || 0) + (price || 0);
                     });
                 }
                 const dailyData = Object.entries(dailyRevenue).map(([date, revenue]) => ({ date, revenue }));
-                // Sort the data by date in ascending order
                 dailyData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
                 setRevenuePerDay(dailyData);
@@ -117,13 +140,8 @@ const DashboardPage = () => {
         };
 
         fetchDashboardData();
-    }, [selectedMonth]);
+    }, [selectedMonth]); // Re-run effect when selectedMonth changes
 
-    const handleMonthChange = (month: Date | undefined) => {
-        if (month) {
-            setSelectedMonth(month);
-        }
-    };
 
     if (loading) {
         return (
@@ -148,7 +166,58 @@ const DashboardPage = () => {
                 "min-h-screen bg-background overflow-hidden"
             )}
         >
-            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+            <div className="flex items-center gap-4 mb-4">
+                <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-[200px] justify-start text-left font-normal",
+                                !selectedMonth && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedMonth ? (
+                                format(selectedMonth, "MMM yyyy")
+                            ) : (
+                                <span>Pick a month</span>
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <div className="p-4">
+                            <input
+                                type="month"
+                                value={format(selectedMonth, "yyyy-MM")}
+                                onChange={e => {
+                                    const [year, month] = e.target.value.split('-').map(Number);
+                                    if (!isNaN(year) && !isNaN(month)) {
+                                        handleMonthChange(new Date(year, month - 1, 1));
+                                    }
+                                }}
+                                className="border rounded px-2 py-1"
+                            />
+                        </div>
+                    </PopoverContent>
+                </Popover>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleMonthChange(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1))}
+                    aria-label="Previous Month"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleMonthChange(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1))}
+                    aria-label="Next Month"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
 
             <div
                 className={cn(
@@ -158,20 +227,20 @@ const DashboardPage = () => {
             >
                 <DashboardCard
                     title="Total Revenue"
-                    description="Total revenue from sales"
+                    description={`Total revenue for ${format(selectedMonth, "MMMM yyyy")}`}
                     value={totalRevenue}
                     className="bg-card text-card-foreground"
                 />
                 <DashboardCard
                     title="Total Orders"
-                    description="Total number of orders"
+                    description={`Total orders for ${format(selectedMonth, "MMMM yyyy")}`}
                     value={totalOrders}
                     className="bg-card text-card-foreground"
                 />
                 <DashboardCard
-                    title="Total Items"
-                    description="Total items in inventory"
-                    value={totalItems}
+                    title="Total Items Quantity"
+                    description="Total quantity in inventory"
+                    value={totalItemsQuantity}
                     className="bg-card text-card-foreground"
                 />
                 <DashboardCard
@@ -185,58 +254,7 @@ const DashboardPage = () => {
             {/* Overview Section with Graph */}
             <div className="flex-1 bg-card rounded-lg p-4 shadow-md flex flex-col">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold">Overview</h2>
-                    <div className="flex items-center gap-2">
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                        "w-[200px] justify-start text-left font-normal",
-                                        !selectedMonth && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {selectedMonth ? (
-                                        format(selectedMonth, "PPP")
-                                    ) : (
-                                        <span>Pick a month</span>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <div className="p-4">
-                                    <input
-                                        type="month"
-                                        value={format(selectedMonth, "yyyy-MM")}
-                                        onChange={e => {
-                                            const [year, month] = e.target.value.split('-').map(Number);
-                                            if (!isNaN(year) && !isNaN(month)) {
-                                                handleMonthChange(new Date(year, month - 1, 1));
-                                            }
-                                        }}
-                                        className="border rounded px-2 py-1"
-                                    />
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleMonthChange(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1))}
-                            aria-label="Previous Month"
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleMonthChange(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1))}
-                            aria-label="Next Month"
-                        >
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
+                    <h2 className="text-xl font-semibold">Revenue Overview</h2>
                 </div>
                 <AnimatePresence>
                     {revenuePerDay.length > 0 ? (
@@ -266,10 +284,10 @@ const DashboardPage = () => {
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="date" />
                                     <YAxis
-                                        tickFormatter={(value) => `₱${value}`} // Add peso sign to Y-axis ticks
+                                        tickFormatter={(value) => formatCurrency(value as number)} // Apply currency formatting to Y-axis ticks
                                     />
                                     <Tooltip
-                                        formatter={(value: number) => `₱${value.toFixed(2)}`} // Add peso sign to tooltip values
+                                        formatter={(value: number) => formatCurrency(value)} // Apply currency formatting to tooltip values
                                     />
                                     <Legend />
                                     <Bar
@@ -302,4 +320,3 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
-

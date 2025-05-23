@@ -14,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { Item } from "@/components/inventory/column";
+import { toast } from "sonner";
 
 interface AddQuantityComponentProps {
   item: Item;
@@ -29,7 +30,6 @@ const AddQuantityComponent: React.FC<AddQuantityComponentProps> = ({
   const [newQuantity, setNewQuantity] = useState<number>(0);
 
   useEffect(() => {
-    // Reset newQuantity when the dialog opens
     if (isViewOpen) {
       setNewQuantity(0);
     }
@@ -60,11 +60,11 @@ const AddQuantityComponent: React.FC<AddQuantityComponentProps> = ({
 
         const responseData = await response.json();
         onClose();
-        alert(responseData.message);
+        toast.success(responseData.message || "Quantity updated successfully");
         window.location.reload();
       } catch (error: any) {
         console.error("Error updating quantity:", error);
-        alert(`Error: ${error.message || "Failed to update quantity"}`);
+        toast.error(`Error: ${error.message || "Failed to update quantity"}`);
       }
     }
   };
@@ -87,7 +87,7 @@ const AddQuantityComponent: React.FC<AddQuantityComponentProps> = ({
               id="item-id"
               value={item.item_id.toString()}
               className="col-span-3"
-              disabled // Make it disabled
+              disabled
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -98,7 +98,7 @@ const AddQuantityComponent: React.FC<AddQuantityComponentProps> = ({
               id="unit"
               value={item.unit}
               className="col-span-3"
-              disabled // Make it disabled
+              disabled 
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -109,7 +109,7 @@ const AddQuantityComponent: React.FC<AddQuantityComponentProps> = ({
               id="description"
               value={item.description}
               className="col-span-3"
-              disabled // Make it disabled
+              disabled 
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -141,6 +141,17 @@ const AddQuantityComponent: React.FC<AddQuantityComponentProps> = ({
             <Input
               id="supplier_name"
               value={item.supplier_name}
+              className="col-span-3"
+              disabled
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="reorder_threshold" className="text-left">
+              Reorder Threshold
+            </Label>
+            <Input
+              id="reorder_threshold"
+              value={item.reorder_threshold}
               className="col-span-3"
               disabled
             />
