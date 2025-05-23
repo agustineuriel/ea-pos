@@ -106,11 +106,11 @@ const CreateCustomerComponent: React.FC<CreateCustomerComponentProps> = ({
                 customer_number: "",
             });
             onClose();
-            alert("Customer created successfully!");
+            // alert("Customer created successfully!");
             window.location.reload();
         } catch (error: any) {
             console.error("Error creating customer:", error);
-            alert(`Error: ${error.message || "Failed to create customer"}`);
+            // alert(`Error: ${error.message || "Failed to create customer"}`);
         } finally {
             setLoading(false);
         }

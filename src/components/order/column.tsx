@@ -133,9 +133,19 @@ export const columns: ColumnDef<Order>[] = [
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => (
-      <div className="text-center">₱{row.original.order_total_price}</div>
-    ),
+    cell: ({ row }) => {
+      const totalPriceValue = row.original.order_total_price; // Directly a number
+
+      // Format as Philippine Peso (PHP) with 2 decimal places and comma separators
+      const formattedTotalPrice = new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(totalPriceValue); // Pass the number directly for formatting
+
+      return <div className="text-center">{formattedTotalPrice}</div>;
+    },
   },
   {
     id: "actions",
@@ -195,6 +205,9 @@ export const columns: ColumnDef<Order>[] = [
                 Copy order ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => window.location.href = `/invoice/${item.order_id}`}>
+                Generate Invoice
+                </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setisViewOpen(true)}>
                 View Details/Update Status
               </DropdownMenuItem>

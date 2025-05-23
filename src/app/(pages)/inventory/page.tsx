@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner"; 
 
 interface Category {
   category_id: number;
@@ -52,6 +53,8 @@ const InventoryPage = () => {
       setCategories(categoriesData.data);
     } catch (error) {
       console.error("Error fetching inventory data:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`Error fetching inventory data: ${errorMessage}`); // Use toaster for fetch errors
     } finally {
       setLoading(false);
     }
@@ -81,9 +84,10 @@ const InventoryPage = () => {
 
       await fetchData();
       setIsCreateItemOpen(false);
+      toast.success("Item created successfully!"); // Success toast
     } catch (error: any) {
       console.error("Error creating item:", error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`); // Use toast.error()
     }
   };
 
@@ -106,9 +110,10 @@ const InventoryPage = () => {
 
       setIsCreateCategoryOpen(false);
       await fetchData();
+      toast.success("Category created successfully!"); // Success toast
     } catch (error: any) {
       console.error("Error creating category:", error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`); // Use toast.error()
     }
   };
 

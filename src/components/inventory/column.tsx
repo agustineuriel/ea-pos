@@ -44,7 +44,8 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost" className="text-center"
+          variant="ghost"
+          className="text-center"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Unit
@@ -59,7 +60,7 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost" 
+          variant="ghost"
           className="text-center"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
@@ -77,7 +78,8 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost" className="text-center"
+          variant="ghost"
+          className="text-center"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Price
@@ -85,14 +87,25 @@ export const columns: ColumnDef<Item>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => <div className="text-center">₱{row.original.price}</div>,
+    cell: ({ row }) => {
+      const priceValue = row.original.price; 
+      const formattedPrice = new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(priceValue); 
+
+      return <div className="text-center">{formattedPrice}</div>;
+    },
   },
   {
     accessorKey: "quantity",
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost" className="text-center"
+          variant="ghost"
+          className="text-center"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Quantity
@@ -109,7 +122,8 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost" className="text-center"
+          variant="ghost"
+          className="text-center"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Reorder Threshold
@@ -126,7 +140,8 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost" className="text-center"
+          variant="ghost"
+          className="text-center"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Category Name
@@ -143,7 +158,8 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost" className="text-center"
+          variant="ghost"
+          className="text-center"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Supplier Name
@@ -160,7 +176,8 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => {
       return (
         <Button
-          variant="ghost" className="text-center"
+          variant="ghost"
+          className="text-center"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Created At
@@ -186,7 +203,7 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => {
       return (
         <Button
-        className="text-center"
+          className="text-center"
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >

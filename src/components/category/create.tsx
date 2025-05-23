@@ -76,12 +76,12 @@ const CreateCategoryComponent: React.FC<CreateCategoryComponentProps> = ({
                 category_name: "",
             });
             onClose();
-            alert("Category created successfully!");
+            // alert("Category created successfully!");
              window.location.reload();
 
         } catch (error: any) {
             console.error("Error creating category:", error);
-            alert(`Error: ${error.message || "Failed to create category"}`);
+            // alert(`Error: ${error.message || "Failed to create category"}`);
         } finally {
             setLoading(false);
         }

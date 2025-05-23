@@ -81,11 +81,11 @@ const EditCategoryComponent: React.FC<EditCategoryComponentProps> = ({
 
             const updatedCategoryData = await response.json();
             onClose();
-            alert(updatedCategoryData.message || "Category updated successfully!");
+            // alert(updatedCategoryData.message || "Category updated successfully!");
             window.location.reload();
         } catch (error: any) {
             console.error("Error updating category:", error);
-            alert(`Error: ${error.message || "Failed to update category"}`);
+            // alert(`Error: ${error.message || "Failed to update category"}`);
         } finally {
             setLoading(false);
         }

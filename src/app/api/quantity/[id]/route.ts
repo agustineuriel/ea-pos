@@ -30,7 +30,7 @@ export async function PATCH(
 
     try {
         console.log("PATCH /api/item/[id] called to update quantity");
-        const id = params.id;
+        const id = await params.id;
         console.log("id:", id);
         const { quantity } = await request.json() as UpdateQuantityRequest;
         console.log("Request body:", { quantity });

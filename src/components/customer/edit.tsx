@@ -106,11 +106,11 @@ const EditCustomerComponent: React.FC<EditCustomerComponentProps> = ({
 
             const updatedCustomerData = await response.json();
             onClose();
-            alert(updatedCustomerData.message || "Customer updated successfully!");
+            // alert(updatedCustomerData.message || "Customer updated successfully!");
             window.location.reload(); // Reload to reflect changes
         } catch (error: any) {
             console.error("Error updating customer:", error);
-            alert(`Error: ${error.message || "Failed to update customer"}`);
+            // alert(`Error: ${error.message || "Failed to update customer"}`);
         } finally {
             setLoading(false);
         }

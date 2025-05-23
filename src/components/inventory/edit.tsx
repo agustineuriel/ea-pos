@@ -125,15 +125,12 @@ const EditItemComponent: React.FC<EditItemComponentProps> = ({
                 },
                 body: JSON.stringify(editedItem),
             });
-
             onClose();
-
-            alert('Item updated successfully!');
             window.location.reload();
 
         } catch (error: any) {
             console.error("Error updating item:", error);
-            alert(`Error: ${error.message || 'Failed to update item'}`);
+            // alert(`Error: ${error.message || 'Failed to update item'}`);
         } finally {
             setLoading(false);
         }

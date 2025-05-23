@@ -102,11 +102,11 @@ const EditSupplierComponent: React.FC<EditSupplierComponentProps> = ({
 
             const updatedSupplierData = await response.json();
             onClose();
-            alert(updatedSupplierData.message || "Supplier updated successfully!");
+            // alert(updatedSupplierData.message || "Supplier updated successfully!");
             window.location.reload();
         } catch (error: any) {
             console.error("Error updating supplier:", error);
-            alert(`Error: ${error.message || "Failed to update supplier"}`);
+            // alert(`Error: ${error.message || "Failed to update supplier"}`);
         } finally {
             setLoading(false);
         }
