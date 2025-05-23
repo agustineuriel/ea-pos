@@ -114,7 +114,15 @@ export const columns: ColumnDef<Item>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-center">{row.original.quantity}</div>
+      <div
+        className={`text-center ${
+          row.original.quantity <= row.original.reorder_threshold
+        ? "font-bold text-red-600"
+        : ""
+        }`}
+      >
+        {row.original.quantity}
+      </div>
     ),
   },
   {
