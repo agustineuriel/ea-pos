@@ -87,7 +87,7 @@ const DashboardPage = () => {
 
                 // Filter orders by selected month
                 const filteredOrders = allOrders.filter((order: any) =>
-                    isSameMonth(parseISO(order.created_at), selectedMonth)
+                    isSameMonth(parseISO(order.order_date), selectedMonth)
                 );
 
                 // Calculate total revenue for the filtered month
@@ -118,7 +118,7 @@ const DashboardPage = () => {
                 const dailyRevenue: { [date: string]: number } = {};
                 if (Array.isArray(filteredOrders)) {
                     filteredOrders.forEach((order: any) => {
-                        const orderDate = new Date(order.created_at);
+                        const orderDate = new Date(order.order_date);
                         const formattedDate = format(orderDate, 'yyyy-MM-dd');
                         const price = typeof order.order_total_price === 'string'
                             ? parseFloat(order.order_total_price)
